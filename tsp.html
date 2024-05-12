@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Traveling Salesman Problem Solver</title>
+    <style>
+        #canvas {
+            border: 1px solid #000;
+        }
+        #btnContainer {
+            margin-top: 10px;
+        }
+        #btnContainer button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Traveling Salesman Problem Solver</h1>
+    <canvas id="canvas"></canvas>
+    <div id="btnContainer">
+        <button onclick="solveTSP()">Solve</button>
+        <button onclick="resetTSP()">Reset</button>
+    </div>
+    <script>
+        const CANVAS_SIZE = 500;
+        const CITY_RADIUS = 5;
+        const CITY_COLOR = 'blue';
+        const PATH_COLOR = 'red';
+
+        let cities = [];
+        let shortestPath = null;
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            cities.push({ x, y });
+            drawCity(x, y);
+        });
+
+        function drawCity(x, y) {
+            ctx.fillStyle = CITY_COLOR;
+            ctx.beginPath();
+            ctx.arc(x, y, CITY_RADIUS, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        function drawPath(path, color) {
+            if (!path) return;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(cities[path[0]].x, cities[path[0]].y);
+            for (let i = 1; i < path.length; i++) {
+                ctx.lineTo(cities[path[i]].x, cities[path[i]].y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function calculateDistance(path) {
+            let distance = 0;
+            for (let i = 0; i < path.length - 1; i++) {
+                let city1 = cities[path[i]];
+                let city2 = cities[path[i + 1]];
+                distance += Math.sqrt(Math.pow(city2.x - city1.x, 2) + Math.pow(city2.y - city1.y, 2));
+            }
+            return distance;
+        }
+
+        function permute(arr) {
+            let permutations = [];
+
+            function backtrack(path) {
+                if (path.length === arr.length) {
+                    permutations.push([...path]);
+                    return;
+                }
+
+                for (let i = 0; i < arr.length; i++) {
+                    if (!path.includes(arr[i])) {
+                        path.push(arr[i]);
+                        backtrack(path);
+                        path.pop();
+                    }
+                }
+            }
+
+            backtrack([]);
+
+            return permutations;
+        }
+
+        function solveTSP() {
+            if (cities.length < 2) {
+                alert("Please add at least 2 cities to solve the Traveling Salesman Problem.");
+                return;
+            }
+
+            shortestPath = null;
+            let permutations = permute(Array(cities.length).fill().map((_, i) => i));
+            let shortestDistance = Infinity;
+
+            for (let i = 0; i < permutations.length; i++) {
+                let distance = calculateDistance(permutations[i]);
+                if (distance < shortestDistance) {
+                    shortestDistance = distance;
+                    shortestPath = permutations[i];
+                }
+            }
+
+            drawPath(shortestPath, PATH_COLOR);
+        }
+
+       
+        function resetTSP() {
+            cities = [];
+            shortestPath = null;
+            ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+        }
+
+        // Initialize canvas
+        canvas.width = CANVAS_SIZE;
+        canvas.height = CANVAS_SIZE;
+        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    </script>
+</body>
+</html>
